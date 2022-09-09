@@ -8,7 +8,7 @@ import csv
 import boto3
 import botocore
 
-import datetime
+import datetime as dt
 import dateutil
 
 import aiohttp
@@ -18,7 +18,7 @@ import time
 import pandas as pd
 from NJTransitAPI import *
 
-##TODO: enacsulate below in a function with return
+##TODO: encapsulate below in a function with return
 # def scrape_stop():
     # ...
     # return { 'message':  f"Wrote {len(filtered_rows)} new buses to s3://{bucket}/{file_name}"}
@@ -40,26 +40,24 @@ def parse_results(route, direction, results):
             stripped_rows.append([i for i in stripped_row if i])
         filtered_rows = [b for b in stripped_rows if len(b)==5]
         
-        print(filtered_rows)
+        print([f for f in filtered_rows])
+        
+        # # clean up fields
+        # for row in filtered_rows:
+        #     row[1] = row[1].split("#")[1]
+        #     row[2] = row[2].split("Arriving in ")[1].split(" minutes")[0]
+        #     row.insert(0, "direction")
+        #     row.insert(0, "route")
+        #     row.insert(
+        #         0, str(
+        #             dt.datetime.now(
+        #                 tz=dateutil.tz.gettz('America/New_York')
+        #                 ).isoformat()
+        #             )
+        #         )
+            
         return
-        
-        # clean up fields
-        for row in filtered_rows:
-            row[1] = row[1].split("#")[1]
-            row[2] = row[2].split("Arriving in ")[1].split(" minutes")[0]
-            # row.insert(0, stop_id)
-            row.insert(
-                0, str(
-                    datetime.datetime.now(
-                        tz=dateutil.tz.gettz('America/New_York')
-                        ).isoformat()
-                    )
-                )
-
-        # # create the df
-        # df = pd.DataFrame(filtered_rows, columns =['timestamp', 'Destination', 'BusID', 'ETA_mins', 'ETA_time', 'Occupancy' ])     
-        
-        # return df   
+  
 
 
 
@@ -103,12 +101,16 @@ for path in route_points[0].paths:
         responses = await asyncio.gather(*tasks)
         # collect the results
         for response in responses:
-            # results.append(await response.json())
-            results.append(await response.text())
+
+            #FIXME: the conversion to text appears to be screwing with the parsing of the html?
+            #results.append(await response.text())
+            results.append(await response.read())
+        await session.close()
+        
         # do something with the results
         parse_results(route, direction, results)
             
-        await session.close()
+
 
     start = time.time()
     asyncio.run(run_tasks())
