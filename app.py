@@ -11,6 +11,11 @@ import botocore
 import datetime
 import dateutil
 
+import aiohttp
+import asyncio
+import time
+
+import pandas as pd
 from NJTransitAPI import *
 
 ##TODO: enacsulate below in a function with return
@@ -19,33 +24,9 @@ from NJTransitAPI import *
     # return { 'message':  f"Wrote {len(filtered_rows)} new buses to s3://{bucket}/{file_name}"}
 
 
-##TODO: pass route in from zappa kwargs or URL
-# my_kwargs = event.get("kwargs")
-# route = my_kwargs['route']
-route = "119"
-
-data, fetch_timestamp = get_xml_data('nj', 'route_points', route=route)
-
-route_services = parse_xml_getRoutePoints(data)
-
-# iterate over the services and routes
-
-for route in route_services:
-    for service in route.paths:
-        stoplist=[p.identity for p in service.points if isinstance(p, Route.Stop)]
-        print (stoplist)
-        
-
-'''
-        url=f"https://www.njtransit.com/my-bus-to?stopID={stop_id}&form=stopID"
-
-        # Request the page and scrape the data
-        try:
-            page = requests.get(url)
-        except:
-            print("error getting web page")
-            
-        tree = html.fromstring(page.content)
+def parse_results(route, direction, results):
+    for page in results:
+        tree = html.fromstring(page)
 
         # parse element using XPath and process
         raw_rows = tree.xpath("//div[@class='media-body']")
@@ -59,11 +40,14 @@ for route in route_services:
             stripped_rows.append([i for i in stripped_row if i])
         filtered_rows = [b for b in stripped_rows if len(b)==5]
         
+        print(filtered_rows)
+        return
+        
         # clean up fields
         for row in filtered_rows:
             row[1] = row[1].split("#")[1]
             row[2] = row[2].split("Arriving in ")[1].split(" minutes")[0]
-            row.insert(0, stop_id)
+            # row.insert(0, stop_id)
             row.insert(
                 0, str(
                     datetime.datetime.now(
@@ -72,9 +56,69 @@ for route in route_services:
                     )
                 )
 
-        # # create the df and prepare to write
-        # df = pd.DataFrame(filtered_rows, columns =['stop_id', 'timestamp', 'Destination', 'BusID', 'ETA_mins', 'ETA_time', 'Occupancy' ])        
+        # # create the df
+        # df = pd.DataFrame(filtered_rows, columns =['timestamp', 'Destination', 'BusID', 'ETA_mins', 'ETA_time', 'Occupancy' ])     
+        
+        # return df   
 
+
+
+##TODO: pass route in from zappa kwargs or URL
+# my_kwargs = event.get("kwargs")
+# route = my_kwargs['route']
+route = "119"
+
+data, fetch_timestamp = get_xml_data('nj', 'route_points', route=route)
+
+route_points = parse_xml_getRoutePoints(data)
+
+
+# focus only on the first defined set of routes in points
+# iterate over the 2 directions
+
+output = []
+
+for path in route_points[0].paths:
+    
+    direction = path.d
+    
+    url = "https://www.njtransit.com/my-bus-to?stopID={}&form=stopID"
+
+    # async based on
+    # https://betterprogramming.pub/asynchronous-programming-in-python-for-making-more-api-calls-faster-419a1d2ee058
+    # https://github.com/PatrickAlphaC/async-python/blob/main/av_async_run.py        
+    
+    results = []
+    
+    def get_tasks(stoplist, session):
+        tasks = []
+        for stop_id in stoplist:
+            tasks.append(session.get(url.format(stop_id), ssl=False))
+        return tasks
+
+    async def run_tasks():
+        session = aiohttp.ClientSession()
+        stoplist=[p.identity for p in path.points if isinstance(p, Route.Stop)]
+        tasks = get_tasks(stoplist, session)
+        responses = await asyncio.gather(*tasks)
+        # collect the results
+        for response in responses:
+            # results.append(await response.json())
+            results.append(await response.text())
+        # do something with the results
+        parse_results(route, direction, results)
+            
+        await session.close()
+
+    start = time.time()
+    asyncio.run(run_tasks())
+    end = time.time()
+    total_time = end - start
+    print(f"Made {len(results)} API calls in {total_time:.1f} seconds.")
+
+
+
+'''
 ## following https://medium.com/@haldis444/use-lambda-to-append-daily-data-to-csv-file-in-s3-2c2813bc33d0
 
 # download s3 csv file to lambda tmp folder

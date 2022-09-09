@@ -8,7 +8,6 @@ An lxml-based grabber/parser that extracts a CSV of an entire route crowding dat
 
 Use `flask run` or VSCode Flask debug profile.
 
-Go to `http://127.0.0.1:5000/scrape?route=119`
 
 ## deployment
 
