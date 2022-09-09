@@ -1,0 +1,14 @@
+{
+    "dev": {
+        "app_function": "app.scrape_route",
+        "profile_name": "starcitygroup_admin",
+        "project_name": "njt-crowding-by-scrape_route",
+        "runtime": "python3.9",
+        "s3_bucket": "njtransit-crowding-by-route-zappa",
+        "events": [{
+            "function": "app.scrape_route",
+            "expression": "rate(1 minute)",
+            "enabled": true
+        }]
+    }
+}
