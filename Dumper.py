@@ -3,11 +3,8 @@ import boto3
 import botocore
 import pandas as pd
 
-def dump_df(df):
-    # print(df)
-    return
+def dump_df(route, df):
 
-    '''
     ## following https://medium.com/@haldis444/use-lambda-to-append-daily-data-to-csv-file-in-s3-2c2813bc33d0
 
     # download s3 csv file to lambda tmp folder
@@ -26,7 +23,8 @@ def dump_df(df):
         if e.response['Error']['Code'] == "404":
             with open(local_file_name, 'w', newline='') as outfile:
                 reader = []
-                for row in filtered_rows:
+                # for row in filtered_rows:
+                for index, row in df.iterrows():
                     reader.insert(0,row)
                 writer = csv.writer(outfile, quoting=csv.QUOTE_ALL)
                 for line in reader:
@@ -42,7 +40,8 @@ def dump_df(df):
         with open(local_file_name,'r') as infile:
             reader = list(csv.reader(infile))
             reader = reader[::-1] # the date is ascending order in file
-            for row in filtered_rows:
+            # for row in filtered_rows:
+            for index, row in df.iterrows():
                 reader.insert(0,row)
 
         with open(local_file_name, 'w', newline='') as outfile:
@@ -56,5 +55,5 @@ def dump_df(df):
     # delete the local tmp beacause AWS reuses lambda containers
     import os
     os.remove(local_file_name)
-
-    '''
+    
+    return f"s3://{bucket_name}/{file_name}"

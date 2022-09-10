@@ -8,7 +8,11 @@ from Dumper import dump_df
 
 import pandas as pd
 
-def scrape_route(route):
+def scrape_route(event, context):
+    
+    #pass route in from zappa kwargs
+    my_kwargs = event.get("kwargs")
+    route = my_kwargs['route']
 
     # get route geometry
     data, fetch_timestamp = get_xml_data('nj', 'route_points', route=route)
@@ -54,26 +58,22 @@ def scrape_route(route):
             # dfs.append(df_direction)
             return df_direction
                 
-        # run and report
+        # dispatch
         start = time.time()
         dfs.append(
             asyncio.run(run_tasks())
         )
         end = time.time()    
-        print(f"Scraped {route} to {direction} in {(end - start):.1f} seconds.")
 
+    # concatenate the results and dump
     data = pd.concat([df for df in dfs])
-    dump_df(data)
-    print(data)        
+    dumped_uri = dump_df(route, data)
+    
+    # report
+    message =  { 'message':
+        f"Scraped {route} to {direction} in {(end - start):.1f} seconds, saving dataframe of shape {data.shape()} to {dumped_uri}"
+        }
+    print(message)
+    return message
 
-
-#######################################################
-################## INVOKE THE SCRIPT ##################
-#######################################################
-
-##TODO: pass route in from zappa kwargs or URL
-# # my_kwargs = event.get("kwargs")
-# route = my_kwargs['route']
-route = "119"
-scrape_route(route)
 

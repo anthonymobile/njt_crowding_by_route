@@ -63,5 +63,8 @@ def parse_results(route, direction, results):
         
         # #drop anything without 'eta_min' in ['0', '<1']
         # df = df[df['eta_min'].isin(['0', '< 1'])]
+        
+        #drop no crowding data
+        df = df[~df['crowding'].isin(['NO DATA'])]
 
     return df
