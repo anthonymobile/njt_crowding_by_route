@@ -61,7 +61,7 @@ def parse_results(route, direction, results):
         page_df = pd.DataFrame(filtered_rows, columns=cols)
         df = pd.concat([df, page_df], axis=0)
         
-        #TODO: drop anything without 'eta_min' in ['0', '<1']
-
+        # #drop anything without 'eta_min' in ['0', '<1']
+        # df = df[df['eta_min'].isin(['0', '< 1'])]
 
     return df

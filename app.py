@@ -6,16 +6,20 @@ from NJTransitAPI import *
 from Parser import parse_results
 from Dumper import dump_df
 
+import pandas as pd
+
 def scrape_route(route):
 
     # get route geometry
     data, fetch_timestamp = get_xml_data('nj', 'route_points', route=route)
     route_points = parse_xml_getRoutePoints(data)
-
+    
+    # make container to hold results
+    dfs = []
 
     # loop over each direction in first defined service
     for path in route_points[0].paths:
-        
+
         direction = path.d
         
         url = "https://www.njtransit.com/my-bus-to?stopID={}&form=stopID"
@@ -45,19 +49,22 @@ def scrape_route(route):
             await session.close()
             
             #parse and dump results
-            df = parse_results(route, direction, results)
-            dump_df(df)
-            
-
-            
-
+            df_direction = parse_results(route, direction, results)
+        
+            # dfs.append(df_direction)
+            return df_direction
                 
-
         # run and report
         start = time.time()
-        asyncio.run(run_tasks())
-        end = time.time()
-        print(f"Made {len(results)} API calls in {(end - start):.1f} seconds.")
+        dfs.append(
+            asyncio.run(run_tasks())
+        )
+        end = time.time()    
+        print(f"Scraped {route} to {direction} in {(end - start):.1f} seconds.")
+
+    data = pd.concat([df for df in dfs])
+    dump_df(data)
+    print(data)        
 
 
 #######################################################
