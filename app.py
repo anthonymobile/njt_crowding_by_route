@@ -17,7 +17,6 @@ def scrape_route(route):
     for path in route_points[0].paths:
         
         direction = path.d
-        print (f"grabbing direction {direction}")
         
         url = "https://www.njtransit.com/my-bus-to?stopID={}&form=stopID"
 
@@ -45,9 +44,9 @@ def scrape_route(route):
 
             await session.close()
             
-            #FIXME: do i need to await something here?
-            #do something with the results
-            parse_results(route, direction, results)
+            #parse and dump results
+            df = parse_results(route, direction, results)
+            dump_df(df)
             
 
             

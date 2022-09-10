@@ -4,6 +4,7 @@ import botocore
 import pandas as pd
 
 def dump_df(df):
+    print(df)
     return
 
     '''

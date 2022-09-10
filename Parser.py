@@ -6,11 +6,21 @@ from lxml import html
 
 def parse_results(route, direction, results):
     
-    n = 0
+    cols = ['timestamp',
+            'route',
+            'stop_id',
+            'destination',
+            'headsign',
+            'bus_id',
+            'eta_min',
+            'eta_time',
+            'crowding'
+            ]
+    
+    df = pd.DataFrame(columns=cols)
     
     for page in results:
         
-
         tree = html.fromstring(page)
         
         # parse stop_id
@@ -19,10 +29,7 @@ def parse_results(route, direction, results):
         #skip this result if we can't extract the stop_id
         except:
             continue
-        
-        n =+ 1
-        print(f"parsing result {n}, stop_id {stop_id}")
-        
+
         # parse element using XPath and process
         raw_rows = tree.xpath("//div[@class='media-body']")
         parsed_rows=[str(row.xpath("string()")) for row in raw_rows]
@@ -50,24 +57,11 @@ def parse_results(route, direction, results):
                         ).isoformat()
                     )
                 )
-            print(row)
+
+        page_df = pd.DataFrame(filtered_rows, columns=cols)
+        df = pd.concat([df, page_df], axis=0)
         
-        cols = ['timestamp',
-                   'route',
-                   'stop_id',
-                   'destination',
-                   'headsign',
-                   'bus_id',
-                   'eta_min',
-                   'eta_time',
-                   'crowding'
-                   ]
-        
- 
-        # df = pd.DataFrame(filtered_rows, columns=cols)
-        # # print(df)
-        
-        # #TODO: drop anything without 'eta_min' in ['0', '<1']
+        #TODO: drop anything without 'eta_min' in ['0', '<1']
 
 
-        # return df
+    return df
