@@ -1,0 +1,73 @@
+import datetime as dt
+import dateutil
+import pandas as pd
+from lxml import etree as ET
+from lxml import html
+
+def parse_results(route, direction, results):
+    
+    n = 0
+    
+    for page in results:
+        
+
+        tree = html.fromstring(page)
+        
+        # parse stop_id
+        try:
+            stop_id = tree.xpath("//p[@class='ff-secondary--bold text--shuttle-gray']")[0].text.strip().split(' ')[-1]
+        #skip this result if we can't extract the stop_id
+        except:
+            continue
+        
+        n =+ 1
+        print(f"parsing result {n}, stop_id {stop_id}")
+        
+        # parse element using XPath and process
+        raw_rows = tree.xpath("//div[@class='media-body']")
+        parsed_rows=[str(row.xpath("string()")) for row in raw_rows]
+        split_rows = [row.split('\n') for row in parsed_rows]
+        stripped_rows = []
+        for row in split_rows:
+            stripped_row = []
+            for word in row:
+                stripped_row.append(word.strip())
+            stripped_rows.append([i for i in stripped_row if i])
+        filtered_rows = [b for b in stripped_rows if len(b)==5]
+        
+        # clean up fields and add metadata
+        for row in filtered_rows:
+            row[1] = row[1].split("#")[1]
+            if row[2] != "DELAYED":
+                row[2] = row[2].split("Arriving in ")[1].split(" minutes")[0]
+            row.insert(0, direction)
+            row.insert(0, stop_id)
+            row.insert(0, route)
+            row.insert(
+                0, str(
+                    dt.datetime.now(
+                        tz=dateutil.tz.gettz('America/New_York')
+                        ).isoformat()
+                    )
+                )
+            print(row)
+        
+        cols = ['timestamp',
+                   'route',
+                   'stop_id',
+                   'destination',
+                   'headsign',
+                   'bus_id',
+                   'eta_min',
+                   'eta_time',
+                   'crowding'
+                   ]
+        
+ 
+        # df = pd.DataFrame(filtered_rows, columns=cols)
+        # # print(df)
+        
+        # #TODO: drop anything without 'eta_min' in ['0', '<1']
+
+
+        # return df
