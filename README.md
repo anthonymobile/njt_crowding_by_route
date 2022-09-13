@@ -6,8 +6,6 @@ An lxml-based grabber/parser that extracts a CSV of an entire route crowding dat
 
 ## local testing
 
-Use `flask run` or VSCode Flask debug profile.
-
 
 ## deployment
 

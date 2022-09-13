@@ -41,7 +41,8 @@ def parse_results(route, direction, results):
                 stripped_row.append(word.strip())
             stripped_rows.append([i for i in stripped_row if i])
         filtered_rows = [b for b in stripped_rows if len(b)==5]
-        
+
+
         # clean up fields and add metadata
         for row in filtered_rows:
             row[1] = row[1].split("#")[1]
@@ -61,8 +62,10 @@ def parse_results(route, direction, results):
         page_df = pd.DataFrame(filtered_rows, columns=cols)
         df = pd.concat([df, page_df], axis=0)
         
-        # #drop anything without 'eta_min' in ['0', '<1']
-        # df = df[df['eta_min'].isin(['0', '< 1'])]
+        # clean up eta_min
+        # n.b. the endpoint https://www.njtransit.com/my-bus-to?stopID=30189&form=stopID
+        # never returns a 0 or < 1 min ETA, 1 is the lowest and we will keep only those
+        df = df[df['eta_min'].isin(['1'])]
         
         #drop no crowding data
         df = df[~df['crowding'].isin(['NO DATA'])]
