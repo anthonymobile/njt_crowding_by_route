@@ -1,3 +1,6 @@
 lxml
 requests
+boto3
 aiohttp
+pandas
+fastparquet

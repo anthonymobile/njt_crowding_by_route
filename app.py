@@ -71,9 +71,9 @@ def scrape_route(event, context):
     
     # report
     message =  { 'message':
-        f"Scraped {route} to {direction} in {(end - start):.1f} seconds, saving dataframe of shape {data.shape()} to {dumped_uri}"
+        f"Scraped {route} in {(end - start):.1f} seconds, saving {len(data)} rows to {dumped_uri}"
         }
-    print(message)
+    
     return message
 
 

@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: Run 1",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "run_1.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
