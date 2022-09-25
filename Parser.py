@@ -77,7 +77,9 @@ def parse_results(route, direction, results):
     # # drop all nans
     # df = df[df['timestamp'].notna()]
     
-    # parse date and set timezone
-    df['timestamp'] = pd.to_datetime(df['timestamp']).dt.tz_convert('America/New_York')
+    # parse date and set timezone -- not sure why so many, but it works so...
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['timestamp'] = df['timestamp'].dt.tz_convert('UTC')
+    df['timestamp'] = df['timestamp'].dt.tz_convert('America/New_York')
     
     return df
