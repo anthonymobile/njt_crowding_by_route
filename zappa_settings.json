@@ -2,7 +2,7 @@
     "dev": {
         "app_function": "app.scrape_route",
         "profile_name": "starcitygroup_admin",
-        "project_name": "njt-crowding-by-route-parquet",
+        "project_name": "njt-crowding-by-route",
         "runtime": "python3.9",
         "s3_bucket": "njtransit-crowding-by-route-zappa",
         "events": [{
